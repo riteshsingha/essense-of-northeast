@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essense of Northeast</title>
+    <style>
+        /* Base Reset & Responsive Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #111;
+        }
+
+        /* Full Screen Responsive Background Image */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('bg.png');
+            background-size: contain;
+            background-position: center;
+            z-index: 1;
+        }
+
+        /* Responsive Top Header Area */
+        header {
+            position: fixed;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4vw;
+            z-index: 10;
+            color: #fff;
+            font-size: clamp(12px, 1.2vw, 15px);
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #4ade80;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Responsive Playlist Sidebar (Glassmorphism) */
+        .playlist-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0; 
+            width: min(380px, 85vw);
+            height: 100%;
+            transform: translateX(100%); /* Stays hidden strictly off-screen by default */
+            background: rgba(17, 17, 17, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            padding: 30px 20px;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .playlist-sidebar.open {
+            transform: translateX(0); /* Slides into view only when toggled */
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .sidebar-header button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-header button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .sidebar-tracks {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+
+        .sidebar-tracks::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-tracks::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .track-item.active {
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .track-item.restricted {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        .track-item img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #222;
+            flex-shrink: 0;
+        }
+
+        .track-item-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .track-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .track-item-artist {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .loading-text {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        /* Responsive Bottom Music Player */
+        .player-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(90vw, 600px);
+            background: rgba(28, 43, 31, 0.75); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            z-index: 10;
+            color: white;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .album-art {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ade80 0%, #1c2b1f 100%);
+            margin-right: 15px;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .track-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            padding-right: 10px;
+        }
+
+        .track-title {
+            font-size: clamp(13px, 1.3vw, 15px);
+            font-weight: 600;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist {
+            font-size: clamp(11px, 1vw, 12px);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
+        }
+
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 12px; 
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            pointer-events: none; 
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: white;
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .ctrl-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 36px;
+            height: 36px;
+            background: white;
+            color: #111;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 15px;
+            padding-left: 2px;
+        }
+        
+        .play-btn.paused {
+            padding-left: 0;
+        }
+
+        #yt-player-container {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background"></div>
+    <div id="yt-player-container"></div>
+
+    <!-- Playlist Sidebar -->
+    <div class="playlist-sidebar" id="playlist-sidebar">
+        <div class="sidebar-header">
+            <h3>Playlist Tracks</h3>
+            <button id="close-sidebar">✕</button>
+        </div>
+        <div class="sidebar-tracks" id="sidebar-tracks">
+            <div class="loading-text">Loading playlist...</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left" id="live-time">--:--</div>
+        <div class="header-center">
+            <div class="online-dot"></div>
+            <span id="online-count">142</span>&nbsp;online
+        </div>
+        <div class="header-right">
+            <div class="tab" id="playlist-btn">☰ Playlist</div>
+        </div>
+    </header>
+
+    <div class="player-container" id="player-ui">
+        <div class="album-art" id="album-art">🎵</div>
+        
+        <div class="track-info">
+            <div class="track-title" id="track-title">Loading track...</div>
+            <div class="track-artist" id="track-artist">YouTube Music</div>
+            
+            <div class="progress-wrapper">
+                <span id="current-time">0:00</span>
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+                <span id="total-time">0:00</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="ctrl-btn" id="prev-btn">⏮</button>
+            <button class="ctrl-btn play-btn" id="play-pause-btn">▶</button>
+            <button class="ctrl-btn" id="next-btn">⏭</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Live Clock & Dynamic Online Users ---
+        function updateTime() {
+            const timeDisplay = document.getElementById('live-time');
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            timeDisplay.textContent = hours + ':' + minutes + ' ' + ampm;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        let onlineUsers = Math.floor(Math.random() * 50) + 120; 
+        const onlineCountDisplay = document.getElementById('online-count');
+        onlineCountDisplay.textContent = onlineUsers;
+
+        setInterval(() => {
+            const change = Math.floor(Math.random() * 9) - 4; 
+            onlineUsers += change;
+            if (onlineUsers < 40) onlineUsers = 40; 
+            onlineCountDisplay.textContent = onlineUsers;
+        }, 5000); 
+
+        // --- 2. Single Playlist Configuration ---
+        const PLAYLIST_ID = 'PLW6pHGnTx70o'; 
+
+        // --- 3. YouTube Iframe API Integration ---
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        let player;
+        let progressInterval;
+        let playlistTracksLoaded = false;
+
+        const playBtn = document.getElementById('play-pause-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const trackTitle = document.getElementById('track-title');
+        const trackArtist = document.getElementById('track-artist');
+        const albumArt = document.getElementById('album-art');
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const currentTimeDisplay = document.getElementById('current-time');
+        const totalTimeDisplay = document.getElementById('total-time');
+        
+        // Sidebar UI Elements
+        const playlistBtn = document.getElementById('playlist-btn');
+        const playlistSidebar = document.getElementById('playlist-sidebar');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebarTracks = document.getElementById('sidebar-tracks');
+        const playerUi = document.getElementById('player-ui');
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('yt-player-container', {
+                height: '1',
+                width: '1',
+                playerVars: {
+                    'listType': 'playlist',
+                    'list': PLAYLIST_ID, 
+                    'controls': 0,
+                    'disablekb': 1,
+                    'autoplay': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerError(event) {
+            console.error("YouTube Player Error Code:", event.data);
+            
+            if (player && typeof player.getPlaylistIndex === 'function') {
+                const badIndex = player.getPlaylistIndex();
+                const badSidebarItem = document.getElementById(`sidebar-track-${badIndex}`);
+                
+                if (badSidebarItem) {
+                    badSidebarItem.classList.add('restricted');
+                    const titleDiv = badSidebarItem.querySelector('.track-item-title');
+                    if (titleDiv) titleDiv.textContent = '⚠️ Unavailable (Blocked by Artist)';
+                }
+            }
+
+            trackTitle.textContent = "Skipping unavailable track...";
+            
+            setTimeout(() => {
+                if (player && typeof player.nextVideo === 'function') {
+                    const state = player.getPlayerState();
+                    if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
+                        player.nextVideo();
+                    } else {
+                        player.nextVideo();
+                        setTimeout(() => player.pauseVideo(), 200);
+                    }
+                }
+            }, 800);
+        }
+
+        function updateMediaMetadata() {
+            if (player && player.getVideoData && typeof player.getVideoData === 'function') {
+                const videoData = player.getVideoData();
+                if(videoData && videoData.title) {
+                    trackTitle.textContent = videoData.title;
+                }
+                if(videoData && videoData.author) {
+                    trackArtist.textContent = videoData.author;
+                }
+                if(videoData && videoData.video_id) {
+                    albumArt.innerHTML = `<img src="https://img.youtube.com/vi/${videoData.video_id}/hqdefault.jpg" alt="Dynamic Album Art">`;
+                    albumArt.style.background = 'none'; 
+                }
+            }
+            highlightCurrentSidebarTrack();
+        }
+
+        function onPlayerReady(event) {
+            setTimeout(() => {
+                player.setShuffle(true);
+                
+                setTimeout(() => {
+                    updateMediaMetadata();
+                }, 800); 
+
+            }, 500);
+
+            playBtn.addEventListener('click', () => {
+                const state = player.getPlayerState();
+                if (state === YT.PlayerState.PLAYING) {
+                    player.pauseVideo();
+                } else {
+                    player.playVideo();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => player.nextVideo());
+            prevBtn.addEventListener('click', () => player.previousVideo());
+
+            progressBar.addEventListener('click', (e) => {
+                if (player && player.getDuration) {
+                    const duration = player.getDuration();
+                    if(duration > 0) {
+                        const rect = progressBar.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left; 
+                        const percentage = clickX / rect.width;
+                        const seekTime = percentage * duration;
+                        player.seekTo(seekTime, true);
+                        updateProgressBar();
+                    }
+                }
+            });
+        }
+
+        // --- 4. Sidebar Functional Logic (Strictly manual toggle) ---
+        playlistBtn.addEventListener('click', () => {
+            playlistSidebar.classList.add('open');
+            loadPlaylistSidebar(); 
+        });
+
+        closeSidebarBtn.addEventListener('click', () => {
+            playlistSidebar.classList.remove('open');
+        });
+
+        function loadPlaylistSidebar() {
+            if (playlistTracksLoaded || !player || !player.getPlaylist) return;
+            
+            const trackIDs = player.getPlaylist();
+            if (!trackIDs || trackIDs.length === 0) return;
+
+            sidebarTracks.innerHTML = ''; 
+
+            trackIDs.forEach((id, index) => {
+                const trackEl = document.createElement('div');
+                trackEl.className = 'track-item';
+                trackEl.id = `sidebar-track-${index}`;
+                
+                trackEl.onclick = () => {
+                    player.playVideoAt(index);
+                };
+
+                trackEl.innerHTML = `
+                    <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="thumbnail">
+                    <div class="track-item-info">
+                        <div class="track-item-title" id="sidebar-title-${index}">Fetching track...</div>
+                        <div class="track-item-artist" id="sidebar-author-${index}">YouTube Music</div>
+                    </div>
+                `;
+                sidebarTracks.appendChild(trackEl);
+
+                fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById(`sidebar-title-${index}`).textContent = data.title;
+                        document.getElementById(`sidebar-author-${index}`).textContent = data.author_name;
+                    })
+                    .catch(() => {
+                        document.getElementById(`sidebar-title-${index}`).textContent = `Track ${index + 1}`;
+                    });
+            });
+
+            playlistTracksLoaded = true;
+            highlightCurrentSidebarTrack(); 
+        }
+
+        function highlightCurrentSidebarTrack() {
+            if (!playlistTracksLoaded || !player || typeof player.getPlaylistIndex !== 'function') return;
+            const currentIndex = player.getPlaylistIndex();
+            
+            const allTracks = document.querySelectorAll('.track-item');
+            allTracks.forEach((el, index) => {
+                if (index === currentIndex) {
+                    el.classList.add('active');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        // --- 5. Player State Handling ---
+        function onPlayerStateChange(event) {
+            updateMediaMetadata();
+
+            if (event.data === YT.PlayerState.PLAYING) {
+                playBtn.innerHTML = '⏸';
+                playBtn.classList.add('paused');
+                
+                updateProgressBar();
+                progressInterval = setInterval(updateProgressBar, 500);
+            } 
+            else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.CUED) {
+                playBtn.innerHTML = '▶';
+                playBtn.classList.remove('paused');
+                clearInterval(progressInterval);
+            }
+            else if (event.data === YT.PlayerState.ENDED) {
+                playBtn.innerHTML = '▶';
+                playBtn.classList.remove('paused');
+                clearInterval(progressInterval);
+            }
+        }
+
+        function updateProgressBar() {
+            if(player && player.getCurrentTime) {
+                const currentSeconds = player.getCurrentTime();
+                const totalSeconds = player.getDuration();
+                
+                if(totalSeconds > 0) {
+                    const percentage = (currentSeconds / totalSeconds) * 100;
+                    progressFill.style.width = percentage + '%';
+                    
+                    currentTimeDisplay.textContent = formatTime(currentSeconds);
+                    totalTimeDisplay.textContent = formatTime(totalSeconds);
+                }
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+    </script>
+</body>
+</html>
