@@ -286,6 +286,15 @@
             font-weight: 500;
         }
 
+        .error-text {
+            text-align: center;
+            color: rgba(255, 120, 120, 0.75);
+            margin-top: 24px;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0 12px;
+        }
+
         /* Sidebar backdrop dim */
         .sidebar-scrim {
             position: fixed;
@@ -391,6 +400,10 @@
             align-items: center;
         }
 
+        .progress-bar.disabled {
+            cursor: default;
+        }
+
         .progress-track {
             width: 100%;
             height: 3px;
@@ -453,6 +466,12 @@
         .ctrl-btn:hover { opacity: 1; background: rgba(255,255,255,0.08); }
         .ctrl-btn:active { transform: scale(0.85); }
 
+        .ctrl-btn:disabled {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
+        }
+
         .ctrl-btn svg {
             width: 19px;
             height: 19px;
@@ -479,6 +498,10 @@
             width: 17px;
             height: 17px;
             fill: #111;
+        }
+
+        .play-btn:disabled {
+            background: rgba(255,255,255,0.6);
         }
 
         #yt-player-container {
@@ -535,7 +558,7 @@
 
             <div class="progress-wrapper">
                 <span id="current-time">0:00</span>
-                <div class="progress-bar" id="progress-bar">
+                <div class="progress-bar disabled" id="progress-bar">
                     <div class="progress-track">
                         <div class="progress-fill" id="progress-fill"></div>
                     </div>
@@ -546,15 +569,15 @@
         </div>
 
         <div class="controls">
-            <button class="ctrl-btn" id="prev-btn" title="Previous Track">
+            <button class="ctrl-btn" id="prev-btn" title="Previous Track" disabled>
                 <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
             </button>
 
-            <button class="ctrl-btn play-btn" id="play-pause-btn" title="Play/Pause">
+            <button class="ctrl-btn play-btn" id="play-pause-btn" title="Play/Pause" disabled>
                 <svg id="play-pause-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </button>
 
-            <button class="ctrl-btn" id="next-btn" title="Next Track">
+            <button class="ctrl-btn" id="next-btn" title="Next Track" disabled>
                 <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
             </button>
         </div>
@@ -582,12 +605,25 @@
         // --- 3. YouTube Iframe API Integration ---
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
+        tag.onerror = () => {
+            trackTitle.textContent = "Couldn't load player";
+            trackArtist.textContent = "Check your connection and reload";
+        };
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         let player;
-        let progressInterval;
+        let progressInterval = null;
         let playlistTracksLoaded = false;
+        let playerIsReady = false;
+
+        // Guards against error-handler race conditions (Bug #1)
+        let skipInProgress = false;
+        let consecutiveErrors = 0;
+        const MAX_CONSECUTIVE_ERRORS = 10; // safety valve if the whole playlist is blocked
+
+        // Tracks in-flight oembed fetches so we don't refire them (Bug #7)
+        const oembedRequested = new Set();
 
         const playBtn = document.getElementById('play-pause-btn');
         const playPauseIcon = document.getElementById('play-pause-icon');
@@ -608,6 +644,13 @@
         const closeSidebarBtn = document.getElementById('close-sidebar');
         const sidebarTracks = document.getElementById('sidebar-tracks');
         const sidebarScrim = document.getElementById('sidebar-scrim');
+
+        function setControlsEnabled(enabled) {
+            playBtn.disabled = !enabled;
+            prevBtn.disabled = !enabled;
+            nextBtn.disabled = !enabled;
+            progressBar.classList.toggle('disabled', !enabled);
+        }
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('yt-player-container', {
@@ -642,18 +685,31 @@
                 }
             }
 
+            // Bug fix #1: guard against overlapping skip calls when multiple
+            // consecutive tracks are blocked (each onError firing its own
+            // timer used to race the others and could skip past good tracks,
+            // or loop forever if the whole playlist was blocked).
+            if (skipInProgress) return;
+            skipInProgress = true;
+
+            consecutiveErrors++;
+            if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+                trackTitle.textContent = "No playable tracks found";
+                trackArtist.textContent = "This playlist may be fully restricted";
+                setControlsEnabled(false);
+                skipInProgress = false;
+                return;
+            }
+
             trackTitle.textContent = "Skipping unavailable track…";
 
             setTimeout(() => {
                 if (player && typeof player.nextVideo === 'function') {
-                    const state = player.getPlayerState();
-                    if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
-                        player.nextVideo();
-                    } else {
-                        player.nextVideo();
-                        setTimeout(() => player.pauseVideo(), 200);
-                    }
+                    player.nextVideo();
                 }
+                // Release the guard once the resulting state/error event has
+                // had a chance to fire, rather than immediately.
+                setTimeout(() => { skipInProgress = false; }, 300);
             }, 800);
         }
 
@@ -662,6 +718,7 @@
                 const videoData = player.getVideoData();
                 if (videoData && videoData.title) {
                     trackTitle.textContent = videoData.title;
+                    consecutiveErrors = 0; // a track loaded successfully, reset the safety counter
                 }
                 if (videoData && videoData.author) {
                     trackArtist.textContent = videoData.author;
@@ -675,12 +732,20 @@
         }
 
         function onPlayerReady(event) {
-            setTimeout(() => {
-                player.setShuffle(true);
-                setTimeout(() => {
-                    updateMediaMetadata();
-                }, 800);
-            }, 500);
+            playerIsReady = true;
+            setControlsEnabled(true);
+
+            // NOTE: shuffle intentionally NOT enabled. YouTube's
+            // setShuffle(true) reorders the *live playback queue* internally,
+            // but getPlaylist() / playVideoAt(index) address tracks by their
+            // position in the original (unshuffled) list. That mismatch is
+            // what caused clicking a sidebar track to play a different song
+            // than the one clicked. Keeping natural order keeps sidebar
+            // indices and actual playback perfectly in sync.
+
+            // Bug fix #3: instead of guessing with nested setTimeouts, poll
+            // briefly until video data actually shows up, then sync the UI.
+            waitForVideoDataThenSync();
 
             playBtn.addEventListener('click', () => {
                 const state = player.getPlayerState();
@@ -695,18 +760,32 @@
             prevBtn.addEventListener('click', () => player.previousVideo());
 
             progressBar.addEventListener('click', (e) => {
-                if (player && player.getDuration) {
-                    const duration = player.getDuration();
-                    if (duration > 0) {
-                        const rect = progressBar.getBoundingClientRect();
-                        const clickX = e.clientX - rect.left;
-                        const percentage = clickX / rect.width;
-                        const seekTime = percentage * duration;
-                        player.seekTo(seekTime, true);
-                        updateProgressBar();
-                    }
-                }
+                // Bug fix #4: give feedback / no-op cleanly instead of silently
+                // failing when there's no duration yet (nothing loaded/playing).
+                if (!player || !player.getDuration) return;
+                const duration = player.getDuration();
+                if (!duration || duration <= 0) return;
+
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const percentage = Math.min(Math.max(clickX / rect.width, 0), 1);
+                const seekTime = percentage * duration;
+                player.seekTo(seekTime, true);
+                updateProgressBar();
             });
+        }
+
+        function waitForVideoDataThenSync(attempt = 0) {
+            const videoData = player && player.getVideoData ? player.getVideoData() : null;
+            if (videoData && videoData.title) {
+                updateMediaMetadata();
+                return;
+            }
+            if (attempt >= 15) { // ~4.5s of polling, then give up quietly
+                updateMediaMetadata();
+                return;
+            }
+            setTimeout(() => waitForVideoDataThenSync(attempt + 1), 300);
         }
 
         // --- 4. Sidebar Functional Logic ---
@@ -726,10 +805,22 @@
         sidebarScrim.addEventListener('click', closeSidebar);
 
         function loadPlaylistSidebar() {
-            if (playlistTracksLoaded || !player || !player.getPlaylist) return;
+            // Bug fix #2: if the player/playlist wasn't ready the first time
+            // the sidebar was opened, retry instead of permanently no-op'ing.
+            if (playlistTracksLoaded) return;
+
+            if (!player || !player.getPlaylist) {
+                sidebarTracks.innerHTML = '<div class="loading-text">Loading playlist…</div>';
+                setTimeout(loadPlaylistSidebar, 400);
+                return;
+            }
 
             const trackIDs = player.getPlaylist();
-            if (!trackIDs || trackIDs.length === 0) return;
+            if (!trackIDs || trackIDs.length === 0) {
+                sidebarTracks.innerHTML = '<div class="loading-text">Loading playlist…</div>';
+                setTimeout(loadPlaylistSidebar, 400);
+                return;
+            }
 
             sidebarTracks.innerHTML = '';
 
@@ -739,6 +830,11 @@
                 trackEl.id = `sidebar-track-${index}`;
 
                 trackEl.onclick = () => {
+                    if (trackEl.classList.contains('restricted')) return;
+                    // Safe because shuffle is disabled: getPlaylist() order,
+                    // getPlaylistIndex(), and playVideoAt(index) all agree on
+                    // the same natural order. Re-enabling shuffle would break
+                    // this (see note in onPlayerReady).
                     player.playVideoAt(index);
                 };
 
@@ -754,19 +850,49 @@
                 `;
                 sidebarTracks.appendChild(trackEl);
 
-                fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`)
-                    .then(res => res.json())
-                    .then(data => {
-                        document.getElementById(`sidebar-title-${index}`).textContent = data.title;
-                        document.getElementById(`sidebar-author-${index}`).textContent = data.author_name;
-                    })
-                    .catch(() => {
-                        document.getElementById(`sidebar-title-${index}`).textContent = `Track ${index + 1}`;
-                    });
+                fetchOembedWithRetry(id, index);
             });
 
             playlistTracksLoaded = true;
             highlightCurrentSidebarTrack();
+        }
+
+        // Bug fix #7: retry once on failure/timeout instead of leaving the
+        // row stuck on "Fetching track…" forever, and guard against
+        // duplicate in-flight requests for the same track.
+        function fetchOembedWithRetry(id, index, attempt = 0) {
+            const key = `${id}:${index}`;
+            if (attempt === 0) {
+                if (oembedRequested.has(key)) return;
+                oembedRequested.add(key);
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`, {
+                signal: controller.signal
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('oembed request failed');
+                    return res.json();
+                })
+                .then(data => {
+                    clearTimeout(timeoutId);
+                    const titleEl = document.getElementById(`sidebar-title-${index}`);
+                    const authorEl = document.getElementById(`sidebar-author-${index}`);
+                    if (titleEl) titleEl.textContent = data.title;
+                    if (authorEl && data.author_name) authorEl.textContent = data.author_name;
+                })
+                .catch(() => {
+                    clearTimeout(timeoutId);
+                    if (attempt < 1) {
+                        setTimeout(() => fetchOembedWithRetry(id, index, attempt + 1), 1000);
+                    } else {
+                        const titleEl = document.getElementById(`sidebar-title-${index}`);
+                        if (titleEl) titleEl.textContent = `Track ${index + 1}`;
+                    }
+                });
         }
 
         function highlightCurrentSidebarTrack() {
@@ -790,16 +916,23 @@
 
             if (event.data === YT.PlayerState.PLAYING) {
                 playPauseIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                // Bug fix #5: always clear any existing interval before
+                // starting a new one, in case PLAYING fires twice in a row
+                // (e.g. after a brief buffering blip) without an
+                // intervening PAUSED/ENDED state.
+                clearInterval(progressInterval);
                 updateProgressBar();
                 progressInterval = setInterval(updateProgressBar, 500);
             }
             else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.CUED) {
                 playPauseIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
                 clearInterval(progressInterval);
+                progressInterval = null;
             }
             else if (event.data === YT.PlayerState.ENDED) {
                 playPauseIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
                 clearInterval(progressInterval);
+                progressInterval = null;
             }
         }
 
@@ -824,6 +957,16 @@
             const s = Math.floor(seconds % 60);
             return m + ':' + (s < 10 ? '0' : '') + s;
         }
+
+        // Bug fix #6: surface a clearer state if the API script itself never
+        // loads at all (e.g. blocked by network policy) rather than leaving
+        // "Loading track…" forever with no explanation.
+        setTimeout(() => {
+            if (!playerIsReady) {
+                trackTitle.textContent = "Still connecting…";
+                trackArtist.textContent = "Tap play once it's ready";
+            }
+        }, 8000);
     </script>
 </body>
 </html>
