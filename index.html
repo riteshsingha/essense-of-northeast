@@ -3,17 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Essence of Northeast</title>
+    <title>Essence of Northeast | Ambient Radio & Soundscapes</title>
+    
+    <!-- Favicons -->
     <link rel="icon" href="icons/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/favicon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icons/favicon-180.png">
+    
+    <!-- Meta & Theme -->
+    <meta name="description" content="Essence of Northeast — Immersive ambient music, nature soundscapes, and cultural discovery across the 8 states of Northeast India.">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#07080c">
+
+    <!-- Typography: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Preload Scenic Artworks for Instant Zero-Delay Rendering -->
+    <link rel="preload" as="image" href="backgrounds/bg-desktop.png">
+    <link rel="preload" as="image" href="backgrounds/bg-desktop-dark.png">
+
+    <!-- Immediate Theme Application Script (Zero FOUC) -->
     <script>
-        // Runs before the stylesheet paints so the correct theme is already
-        // in place on first frame: no flash of the wrong background.
         (function () {
             var stored = null;
             try { stored = localStorage.getItem('eon-theme'); } catch (e) { /* storage blocked */ }
@@ -29,85 +43,718 @@
 </head>
 <body>
 
-    <div class="background" aria-hidden="true">
+    <!-- Atmospheric Scenic Background System -->
+    <div class="background" aria-hidden="true" id="bg-container">
         <div class="bg-layer bg-layer-light"></div>
         <div class="bg-layer bg-layer-dark"></div>
-    </div>
-    <div id="yt-player-container"></div>
-    <div class="sidebar-scrim" id="sidebar-scrim"></div>
-
-    <!-- Playlist Sidebar -->
-    <div class="playlist-sidebar" id="playlist-sidebar">
-        <div class="sidebar-header">
-            <h3>Playlist</h3>
-            <button id="close-sidebar" aria-label="Close">✕</button>
-        </div>
-        <div class="sidebar-tracks" id="sidebar-tracks">
-            <div class="loading-text">Loading playlist…</div>
-        </div>
+        <div class="bg-ambient-vignette"></div>
+        <div class="bg-ambient-glow" id="ambient-glow"></div>
     </div>
 
-    <header>
-        <div class="header-left" id="live-time">--:--</div>
-        <div class="header-right">
-            <button class="tab theme-toggle" id="theme-toggle" type="button"
-                    aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
-                <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 100-2H2a1 1 0 100 2zm18 0h2a1 1 0 100-2h-2a1 1 0 100 2zM11 2v2a1 1 0 102 0V2a1 1 0 10-2 0zm0 18v2a1 1 0 102 0v-2a1 1 0 10-2 0zM5.99 4.58a1 1 0 10-1.41 1.41l1.06 1.06a1 1 0 101.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 10-1.41 1.41l1.06 1.06a1 1 0 101.41-1.41l-1.06-1.06zm1.06-10.96a1 1 0 10-1.41-1.41l-1.06 1.06a1 1 0 101.41 1.41l1.06-1.06zM7.05 18.36a1 1 0 10-1.41-1.41l-1.06 1.06a1 1 0 101.41 1.41l1.06-1.06z"/></svg>
-                <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 01-4.4 2.26 5.4 5.4 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
-            </button>
-            <div class="tab" id="playlist-btn">
-                <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>
-                Playlist
+    <!-- Weather & Particle Canvas Overlay -->
+    <canvas id="weather-canvas" class="weather-canvas" aria-hidden="true"></canvas>
+
+    <!-- Hidden YouTube API Frame Container -->
+    <div id="yt-player-container" aria-hidden="true"></div>
+
+    <!-- Backdrop Scrim for Drawers & Modals -->
+    <div class="sidebar-scrim" id="sidebar-scrim" aria-hidden="true"></div>
+
+    <!-- Top Header -->
+    <header class="app-header" id="app-header">
+        <div class="header-left">
+            <div class="brand-pill" tabindex="0" role="button" aria-label="Essence of Northeast, click for Studio View" id="brand-pill">
+                <div class="brand-logo" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                </div>
+                <div class="brand-details">
+                    <span class="brand-title">Essence of Northeast</span>
+                    <span class="brand-badge">
+                        <span class="live-dot" aria-hidden="true"></span>
+                        <span class="badge-text">Curated Radio</span>
+                    </span>
+                </div>
             </div>
+        </div>
+
+        <div class="header-center">
+            <div class="clock-pill" id="live-clock" title="Local Time & Diurnal Atmosphere">
+                <span class="phase-icon" id="phase-icon" aria-hidden="true">☀️</span>
+                <span class="clock-time" id="live-time">--:--</span>
+                <span class="clock-divider" aria-hidden="true">•</span>
+                <span class="phase-label" id="phase-label">Day</span>
+                <span class="clock-divider" aria-hidden="true">•</span>
+                <span class="clock-date" id="live-date">---</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Ambient Nature Soundscape Mixer Trigger -->
+            <button class="nav-pill-btn" id="soundscape-btn" type="button"
+                    title="Nature Soundscapes & Weather [S]" aria-label="Open nature sounds mixer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                </svg>
+                <span>Atmosphere</span>
+            </button>
+
+            <!-- Explore 8 States Cultural Guide Trigger -->
+            <button class="nav-pill-btn" id="explore-btn" type="button"
+                    title="Explore Northeast India [E]" aria-label="Explore 8 States of Northeast India">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
+                <span>Explore</span>
+            </button>
+
+            <!-- Zen Mode Toggle -->
+            <button class="nav-pill-btn icon-only" id="zen-btn" type="button"
+                    title="Zen Mode (Hide UI) [Z]" aria-label="Toggle Zen Mode" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+            </button>
+
+            <!-- Sleep Timer Trigger -->
+            <div class="sleep-timer-wrapper">
+                <button class="nav-pill-btn" id="sleep-timer-btn" type="button"
+                        title="Sleep Timer" aria-label="Sleep timer options" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span id="sleep-timer-label">Timer</span>
+                </button>
+
+                <!-- Sleep Timer Floating Popover -->
+                <div class="sleep-timer-menu" id="sleep-timer-menu" role="menu" aria-label="Sleep Timer Options">
+                    <button class="timer-opt active" data-minutes="0" role="menuitem">Off</button>
+                    <button class="timer-opt" data-minutes="15" role="menuitem">15 min</button>
+                    <button class="timer-opt" data-minutes="30" role="menuitem">30 min</button>
+                    <button class="timer-opt" data-minutes="45" role="menuitem">45 min</button>
+                    <button class="timer-opt" data-minutes="60" role="menuitem">60 min</button>
+                </div>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button class="nav-pill-btn icon-only theme-toggle" id="theme-toggle" type="button"
+                    aria-label="Switch to dark mode" title="Toggle Theme [T]" aria-pressed="false">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+
+            <!-- Keyboard Shortcuts Helper -->
+            <button class="nav-pill-btn icon-only" id="shortcuts-btn" type="button"
+                    title="Keyboard Shortcuts [?]" aria-label="View Keyboard Shortcuts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                    <line x1="6" y1="8" x2="6" y2="8"></line>
+                    <line x1="10" y1="8" x2="10" y2="8"></line>
+                    <line x1="14" y1="8" x2="14" y2="8"></line>
+                    <line x1="18" y1="8" x2="18" y2="8"></line>
+                    <line x1="6" y1="12" x2="6" y2="12"></line>
+                    <line x1="18" y1="12" x2="18" y2="12"></line>
+                    <line x1="7" y1="16" x2="17" y2="16"></line>
+                </svg>
+            </button>
+
+            <!-- Playlist Drawer Trigger -->
+            <button class="nav-pill-btn playlist-toggle-btn" id="playlist-btn" type="button"
+                    title="Toggle Playlist [P]" aria-label="Open playlist queue" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Queue</span>
+                <span class="playlist-badge" id="header-track-count">--</span>
+            </button>
         </div>
     </header>
 
-    <div class="player-container" id="player-ui">
-        <div class="album-art" id="album-art">🎵</div>
+    <!-- Nature Soundscapes & Weather Mixer Panel (Drawer) -->
+    <aside class="side-panel" id="soundscape-panel" aria-label="Nature Soundscapes & Weather Mixer">
+        <div class="sidebar-header">
+            <div class="sidebar-header-title">
+                <h3>Nature Soundscapes</h3>
+                <span class="sidebar-count-badge">Live Synthesizer</span>
+            </div>
+            <button class="icon-circle-btn" id="close-soundscape-btn" type="button" aria-label="Close soundscape mixer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
 
-        <div class="track-info">
-            <div class="track-title" id="track-title">Loading track…</div>
-            <div class="track-artist" id="track-artist">YouTube Music</div>
+        <p class="panel-subtitle">Blend authentic Northeast natural elements with the ambient radio.</p>
 
-            <div class="progress-wrapper">
-                <span id="current-time">0:00</span>
-                <div class="progress-bar disabled" id="progress-bar">
+        <!-- Atmosphere Lighting Mode -->
+        <div class="sound-group">
+            <div class="sound-group-header">
+                <span class="sound-group-label">Atmosphere Lighting:</span>
+                <span class="phase-indicator-badge" id="current-phase-badge">Sync</span>
+            </div>
+            <div class="diurnal-selector" id="diurnal-selector">
+                <button class="diurnal-pill" id="atmo-btn-day" data-atmo-theme="light" title="Daylight Tea Garden Ambiance">
+                    <span class="diurnal-pill-icon">☀️</span>
+                    <span>Day</span>
+                </button>
+                <button class="diurnal-pill" id="atmo-btn-night" data-atmo-theme="dark" title="Midnight Starlight Ambiance">
+                    <span class="diurnal-pill-icon">🌙</span>
+                    <span>Night</span>
+                </button>
+                <button class="diurnal-pill active" id="atmo-btn-auto" data-atmo-theme="auto" title="Synchronize with clock">
+                    <span class="diurnal-pill-icon">⏱️</span>
+                    <span>Auto</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Weather Effect Selector -->
+        <div class="sound-group">
+            <span class="sound-group-label">Visual Atmosphere:</span>
+            <div class="weather-selector">
+                <button class="weather-pill active" data-weather="fireflies">✨ Fireflies</button>
+                <button class="weather-pill" data-weather="rain">🌧️ Rain</button>
+                <button class="weather-pill" data-weather="mist">🌫️ Mountain Mist</button>
+                <button class="weather-pill" data-weather="none">Clear</button>
+            </div>
+        </div>
+
+        <!-- Ambient Nature Faders -->
+        <div class="sound-faders-grid">
+            <div class="sound-fader-card">
+                <div class="fader-header">
+                    <span class="fader-title">🌧️ Cherrapunji Rain</span>
+                    <span class="fader-value" id="val-rain">0%</span>
+                </div>
+                <input type="range" class="fader-range" id="fader-rain" min="0" max="100" value="0" aria-label="Rain volume">
+            </div>
+
+            <div class="sound-fader-card">
+                <div class="fader-header">
+                    <span class="fader-title">🔥 Mountain Campfire</span>
+                    <span class="fader-value" id="val-fire">0%</span>
+                </div>
+                <input type="range" class="fader-range" id="fader-fire" min="0" max="100" value="0" aria-label="Campfire volume">
+            </div>
+
+            <div class="sound-fader-card">
+                <div class="fader-header">
+                    <span class="fader-title">🌊 Brahmaputra Stream</span>
+                    <span class="fader-value" id="val-stream">0%</span>
+                </div>
+                <input type="range" class="fader-range" id="fader-stream" min="0" max="100" value="0" aria-label="Stream volume">
+            </div>
+
+            <div class="sound-fader-card">
+                <div class="fader-header">
+                    <span class="fader-title">🦗 Forest Night Crickets</span>
+                    <span class="fader-value" id="val-crickets">0%</span>
+                </div>
+                <input type="range" class="fader-range" id="fader-crickets" min="0" max="100" value="0" aria-label="Crickets volume">
+            </div>
+        </div>
+
+        <!-- Monastery Chime Interactive Action -->
+        <div class="monastery-card">
+            <div class="monastery-desc">
+                <h4>🔔 Tawang Monastery Bowl</h4>
+                <p>Resonant Tibetan singing bowl crafted with harmonic acoustics.</p>
+            </div>
+            <button class="monastery-bell-btn" id="monastery-bell-btn" type="button">
+                Ring Chime
+            </button>
+        </div>
+    </aside>
+
+    <!-- Explore the 8 States Cultural Drawer -->
+    <aside class="side-panel" id="explore-panel" aria-label="Explore 8 States of Northeast India">
+        <div class="sidebar-header">
+            <div class="sidebar-header-title">
+                <h3>The Eight Sisters</h3>
+                <span class="sidebar-count-badge">Cultural Guide</span>
+            </div>
+            <button class="icon-circle-btn" id="close-explore-btn" type="button" aria-label="Close Explore Guide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <p class="panel-subtitle">Discover the heritage, landscapes, and spirit behind the music.</p>
+
+        <div class="explore-states-list">
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Assam</h4>
+                    <span class="state-tag">Brahmaputra & Tea</span>
+                </div>
+                <p>Home of the mighty Brahmaputra river, Kaziranga's one-horned rhinos, ancient temples, lush rolling tea gardens, and the rhythmic folk beats of Bihu.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Meghalaya</h4>
+                    <span class="state-tag">Abode of Clouds</span>
+                </div>
+                <p>Misty pine highlands, centuries-old Living Root Bridges woven from ficus elastica trees, crystal-clear Umngot waters in Dawki, and monsoon thunder.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Arunachal Pradesh</h4>
+                    <span class="state-tag">Dawn-Lit Mountains</span>
+                </div>
+                <p>Snow-capped Himalayan ridges, the spiritual calm of 400-year-old Tawang Monastery, and untouched ancient mountain passes.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Nagaland</h4>
+                    <span class="state-tag">Land of Festivals</span>
+                </div>
+                <p>Vibrant tribal heritage, ethereal lilies of Dzukou Valley, traditional log drums, folk polyphony, and the famous Hornbill celebration.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Manipur</h4>
+                    <span class="state-tag">Jeweled Land</span>
+                </div>
+                <p>The floating phumdi islands of Loktak Lake, birthplace of modern polo, classical Manipuri dance drama, and serene hillside valleys.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Mizoram</h4>
+                    <span class="state-tag">Songbird of the East</span>
+                </div>
+                <p>Clifftop bamboo forests, the rhythmic Cheraw bamboo dance, rolling green hills, and peaceful church-bell choirs echoing through the mist.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Sikkim</h4>
+                    <span class="state-tag">Himalayan Sanctuary</span>
+                </div>
+                <p>Guarded by sacred Mount Kangchenjunga, glacial alpine lakes like Tsomgo, rhododendron valleys, and peaceful Buddhist prayer flags.</p>
+            </div>
+
+            <div class="state-card">
+                <div class="state-card-header">
+                    <h4>Tripura</h4>
+                    <span class="state-tag">Royal Heritage</span>
+                </div>
+                <p>The marble splendor of Ujjayanta Palace, the water kingdom of Neermahal, and ancient mysterious rock-cut bas-reliefs at Unakoti.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Playlist Sidebar / Queue Drawer -->
+    <aside class="playlist-sidebar" id="playlist-sidebar" aria-label="Playlist Queue">
+        <div class="sidebar-header">
+            <div class="sidebar-header-title">
+                <h3>Track Queue</h3>
+                <span class="sidebar-count-badge" id="sidebar-count">Loading…</span>
+            </div>
+            <button class="icon-circle-btn" id="close-sidebar" type="button" aria-label="Close Playlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Filter Tabs: All vs Favorites -->
+        <div class="queue-tab-bar">
+            <button class="queue-tab active" id="tab-all-tracks" type="button">All Tracks</button>
+            <button class="queue-tab" id="tab-fav-tracks" type="button">❤️ Favorites (<span id="fav-count">0</span>)</button>
+        </div>
+
+        <!-- Search / Filter Input -->
+        <div class="sidebar-search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="playlist-search" class="search-input" placeholder="Search track or artist…" aria-label="Search tracks in playlist" autocomplete="off">
+            <button class="search-clear-btn" id="search-clear-btn" type="button" aria-label="Clear search">✕</button>
+        </div>
+
+        <!-- Track List Container -->
+        <div class="sidebar-tracks" id="sidebar-tracks" role="list">
+            <div class="loading-state">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="loading-caption">Fetching curated tracks…</div>
+            </div>
+        </div>
+
+        <!-- Floating Quick Scroll-to-active Button -->
+        <button class="jump-to-playing-btn" id="jump-to-active-btn" type="button" title="Scroll to currently playing track">
+            <span class="mini-eq" aria-hidden="true">
+                <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+            </span>
+            <span>Jump to Now Playing</span>
+        </button>
+    </aside>
+
+    <!-- Studio / Fullscreen Immersive Canvas Player View -->
+    <section class="studio-view" id="studio-view" aria-label="Studio Immersive Player View" aria-hidden="true">
+        <button class="studio-close-btn icon-circle-btn" id="close-studio-btn" type="button" aria-label="Close Studio View">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="studio-content">
+            <!-- Grand Vinyl Art with Radial Lighting -->
+            <div class="studio-vinyl-container">
+                <div class="studio-album-art" id="studio-album-art">
+                    <div class="album-art-placeholder" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                    </div>
+                </div>
+                <div class="studio-vinyl-disc" aria-hidden="true">
+                    <div class="vinyl-center-groove"></div>
+                </div>
+            </div>
+
+            <div class="studio-meta">
+                <span class="studio-badge">Northeast India Ambient Radio</span>
+                <h1 class="studio-title" id="studio-title">Loading track…</h1>
+                <p class="studio-artist" id="studio-artist">YouTube Music</p>
+            </div>
+
+            <!-- Studio Scrubber -->
+            <div class="studio-scrubber-wrapper">
+                <span class="time-label current" id="studio-current-time">0:00</span>
+                <div class="progress-bar" id="studio-progress-bar" role="slider" aria-label="Seek track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
                     <div class="progress-track">
+                        <div class="progress-fill" id="studio-progress-fill"></div>
+                    </div>
+                    <div class="progress-thumb" id="studio-progress-thumb"></div>
+                </div>
+                <span class="time-label total" id="studio-total-time">0:00</span>
+            </div>
+
+            <!-- Studio Media Controls -->
+            <div class="studio-controls">
+                <button class="ctrl-btn" id="studio-repeat-btn" type="button" title="Repeat mode" aria-label="Repeat mode">
+                    <svg id="studio-repeat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                </button>
+
+                <!-- Studio Shuffle Button -->
+                <button class="ctrl-btn" id="studio-shuffle-btn" type="button" title="Shuffle mode" aria-label="Shuffle mode">
+                    <svg id="studio-shuffle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 3 21 3 21 8"></polyline>
+                        <line x1="4" y1="20" x2="21" y2="3"></line>
+                        <polyline points="21 16 21 21 16 21"></polyline>
+                        <line x1="15" y1="15" x2="21" y2="21"></line>
+                        <line x1="4" y1="4" x2="9" y2="9"></line>
+                    </svg>
+                </button>
+
+                <button class="ctrl-btn" id="studio-prev-btn" type="button" title="Previous Track" aria-label="Previous Track">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                        <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+                    </svg>
+                </button>
+
+                <button class="ctrl-btn play-btn studio-play-btn" id="studio-play-btn" type="button" title="Play or Pause" aria-label="Play or Pause">
+                    <svg id="studio-play-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </button>
+
+                <button class="ctrl-btn" id="studio-next-btn" type="button" title="Next Track" aria-label="Next Track">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                        <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+                    </svg>
+                </button>
+
+                <button class="ctrl-btn" id="studio-like-btn" type="button" title="Add to Favorites" aria-label="Add to favorites">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Primary "Now Playing" Deck / Floating Dock -->
+    <main class="player-container" id="player-ui" role="region" aria-label="Audio Player Controls">
+        <!-- Vinyl / Album Art Container -->
+        <div class="album-art-deck" id="album-art-deck" title="Click to open Studio View">
+            <div class="album-art" id="album-art">
+                <div class="album-art-placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                </div>
+            </div>
+            <div class="vinyl-groove" aria-hidden="true"></div>
+        </div>
+
+        <!-- Track Information & Interactive Scrubber -->
+        <div class="track-info">
+            <div class="track-header-meta">
+                <div class="track-titles-wrapper">
+                    <div class="track-title" id="track-title" tabindex="0">Connecting to stream…</div>
+                    <div class="track-artist-meta">
+                        <span class="track-artist" id="track-artist">Northeast Soundscapes</span>
+                        <span class="track-artist-sep" aria-hidden="true">•</span>
+                        <span class="track-index-badge" id="track-index-badge">--/--</span>
+                    </div>
+                </div>
+
+                <!-- Live Animated Equalizer Bars -->
+                <div class="live-equalizer" id="live-equalizer" aria-hidden="true" title="Audio playing">
+                    <span class="eq-bar eq-bar-1"></span>
+                    <span class="eq-bar eq-bar-2"></span>
+                    <span class="eq-bar eq-bar-3"></span>
+                    <span class="eq-bar eq-bar-4"></span>
+                </div>
+            </div>
+
+            <!-- Scrubber Timeline with Hover Tooltip -->
+            <div class="progress-wrapper">
+                <span class="time-label current" id="current-time">0:00</span>
+                <div class="progress-bar disabled" id="progress-bar" role="slider" aria-label="Seek track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                    <div class="progress-tooltip" id="progress-tooltip">0:00</div>
+                    <div class="progress-track">
+                        <div class="progress-buffer" id="progress-buffer"></div>
                         <div class="progress-fill" id="progress-fill"></div>
                     </div>
                     <div class="progress-thumb" id="progress-thumb"></div>
                 </div>
-                <span id="total-time">0:00</span>
+                <span class="time-label total" id="total-time">0:00</span>
             </div>
         </div>
 
+        <!-- Master Transport Controls Cluster -->
         <div class="controls">
-            <button class="ctrl-btn" id="repeat-btn" title="Repeat off" aria-label="Repeat off" disabled>
-                <svg id="repeat-icon" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            <!-- Favorite / Like Song Button -->
+            <button class="ctrl-btn icon-heart" id="like-btn" type="button" title="Add to Favorites [L]" aria-label="Favorite this track">
+                <svg id="like-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
             </button>
 
-            <button class="ctrl-btn" id="prev-btn" title="Previous Track" disabled>
-                <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            <!-- Repeat Mode Button -->
+            <button class="ctrl-btn" id="repeat-btn" type="button" title="Repeat off [R]" aria-label="Repeat off" disabled>
+                <svg id="repeat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
             </button>
 
-            <button class="ctrl-btn play-btn" id="play-pause-btn" title="Play/Pause" disabled>
-                <svg id="play-pause-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <!-- Shuffle Mode Button -->
+            <button class="ctrl-btn" id="shuffle-btn" type="button" title="Shuffle off [U]" aria-label="Shuffle off" aria-pressed="false" disabled>
+                <svg id="shuffle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
             </button>
 
-            <button class="ctrl-btn" id="next-btn" title="Next Track" disabled>
-                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            <!-- Previous Track Button -->
+            <button class="ctrl-btn" id="prev-btn" type="button" title="Previous Track [Shift+←]" aria-label="Previous Track" disabled>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                    <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+                </svg>
             </button>
 
+            <!-- Play / Pause Button (Hero Action) -->
+            <button class="ctrl-btn play-btn" id="play-pause-btn" type="button" title="Play [Space]" aria-label="Play or Pause" disabled>
+                <svg id="play-pause-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            </button>
+
+            <!-- Next Track Button -->
+            <button class="ctrl-btn" id="next-btn" type="button" title="Next Track [Shift+→]" aria-label="Next Track" disabled>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                    <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+                </svg>
+            </button>
+
+            <!-- Volume Control Cluster -->
             <div class="volume-control" id="volume-control">
-                <button class="ctrl-btn" id="volume-btn" title="Mute" aria-label="Mute" aria-pressed="false" disabled>
-                    <svg id="volume-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <button class="ctrl-btn volume-btn" id="volume-btn" type="button" title="Mute [M]" aria-label="Mute" aria-pressed="false" disabled>
+                    <svg id="volume-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
                 </button>
-                <input type="range" class="volume-slider" id="volume-slider"
-                       min="0" max="100" step="1" value="70" aria-label="Volume level">
+                <div class="volume-slider-wrapper">
+                    <input type="range" class="volume-slider" id="volume-slider"
+                           min="0" max="100" step="1" value="70" aria-label="Volume level">
+                    <span class="volume-tooltip" id="volume-tooltip">70%</span>
+                </div>
+            </div>
+
+            <!-- Studio View Expand Trigger -->
+            <button class="ctrl-btn studio-expand-btn" id="studio-expand-btn" type="button" title="Expand Studio Mode [Enter]" aria-label="Expand studio player mode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+            </button>
+        </div>
+    </main>
+
+    <!-- Zen Mode Exit Pill -->
+    <button class="zen-exit-pill" id="zen-exit-btn" type="button" title="Exit Zen Mode [Z or Esc]" aria-label="Exit Zen Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="4 14 10 14 10 20"></polyline>
+            <polyline points="20 10 14 10 14 4"></polyline>
+            <line x1="14" y1="10" x2="21" y2="3"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+        <span>Exit Zen Mode</span>
+    </button>
+
+    <!-- Keyboard Shortcuts Dialog Modal -->
+    <div class="modal-backdrop" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
+        <div class="shortcuts-card">
+            <div class="shortcuts-header">
+                <div class="shortcuts-title-group">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <line x1="6" y1="8" x2="6" y2="8"></line>
+                        <line x1="10" y1="8" x2="10" y2="8"></line>
+                        <line x1="14" y1="8" x2="14" y2="8"></line>
+                        <line x1="18" y1="8" x2="18" y2="8"></line>
+                        <line x1="6" y1="12" x2="6" y2="12"></line>
+                        <line x1="18" y1="12" x2="18" y2="12"></line>
+                        <line x1="7" y1="16" x2="17" y2="16"></line>
+                    </svg>
+                    <h3 id="shortcuts-modal-title">Keyboard Shortcuts</h3>
+                </div>
+                <button class="icon-circle-btn" id="close-shortcuts-btn" type="button" aria-label="Close shortcuts modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Play / Pause</span>
+                    <kbd>Space</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Seek Backward / Forward 5s</span>
+                    <div class="kbd-group"><kbd>←</kbd><kbd>→</kbd></div>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Volume Up / Down</span>
+                    <div class="kbd-group"><kbd>↑</kbd><kbd>↓</kbd></div>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Mute / Unmute</span>
+                    <kbd>M</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Next / Previous Track</span>
+                    <div class="kbd-group"><kbd>Shift</kbd>+<kbd>→</kbd> / <kbd>←</kbd></div>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Toggle Track Queue</span>
+                    <kbd>P</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Favorite / Bookmark Track</span>
+                    <kbd>L</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Nature Soundscapes & Weather</span>
+                    <kbd>S</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Explore 8 States Guide</span>
+                    <kbd>E</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Studio Immersive Mode</span>
+                    <kbd>Enter</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Cycle Repeat Mode</span>
+                    <kbd>R</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Toggle Shuffle Mode</span>
+                    <kbd>U</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Toggle Theme (Light / Dark)</span>
+                    <kbd>T</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Zen Mode (Wallpaper Focus)</span>
+                    <kbd>Z</kbd>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-desc">Show Shortcuts Guide</span>
+                    <kbd>?</kbd>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Toast Notification Banner -->
+    <div class="app-toast" id="app-toast" role="status" aria-live="polite"></div>
+
+    <!-- Scripts: Procedural Soundscape Engine & Main App -->
+    <script src="audio-ambient.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
