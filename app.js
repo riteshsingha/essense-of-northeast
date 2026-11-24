@@ -54,7 +54,11 @@ function updateLiveTime() {
     }
 
     const isNight = now.getHours() >= 18 || now.getHours() < 6;
-    if (phaseIcon) phaseIcon.textContent = isNight ? '🌙' : '☀️';
+    if (phaseIcon) {
+        phaseIcon.innerHTML = isNight
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>`;
+    }
     if (phaseLabel) phaseLabel.textContent = isNight ? 'Night' : 'Day';
 }
 setInterval(updateLiveTime, 1000);
@@ -117,21 +121,21 @@ if (themeToggle) {
     themeToggle.addEventListener('click', () => {
         const next = currentTheme() === 'dark' ? 'light' : 'dark';
         applyTheme(next, 'manual');
-        showToast(next === 'dark' ? '🌙 Night atmosphere enabled' : '☀️ Daylight atmosphere enabled');
+        showToast(next === 'dark' ? 'Night atmosphere enabled' : 'Daylight atmosphere enabled');
     });
 }
 
 if (atmoBtnDay) {
     atmoBtnDay.addEventListener('click', () => {
         applyTheme('light', 'manual');
-        showToast('☀️ Daylight atmosphere enabled');
+        showToast('Daylight atmosphere enabled');
     });
 }
 
 if (atmoBtnNight) {
     atmoBtnNight.addEventListener('click', () => {
         applyTheme('dark', 'manual');
-        showToast('🌙 Night atmosphere enabled');
+        showToast('Night atmosphere enabled');
     });
 }
 
@@ -263,7 +267,7 @@ function triggerSleepTimerShutdown() {
     if (sleepTimerLabel) sleepTimerLabel.textContent = 'Timer';
     timerOptions.forEach(o => o.classList.toggle('active', o.getAttribute('data-minutes') === '0'));
 
-    showToast('Sleep timer ended — goodnight 🌙', 4000);
+    showToast('Sleep timer ended', 4000);
     if (player && typeof player.pauseVideo === 'function') {
         player.pauseVideo();
     }
@@ -425,7 +429,7 @@ function toggleFavoriteCurrentTrack() {
         showToast('Removed from favorites');
     } else {
         favoriteTrackIds.add(id);
-        showToast('Added to ❤️ Favorites');
+        showToast('Added to favorites');
     }
 
     writeStored(FAVORITES_KEY, JSON.stringify(Array.from(favoriteTrackIds)));
@@ -615,7 +619,7 @@ function toggleShuffle() {
     isShuffleOn = !isShuffleOn;
     writeStored('eon-shuffle', isShuffleOn ? 'true' : 'false');
     applyShuffleState();
-    showToast(isShuffleOn ? '🔀 Shuffle On' : '➡️ Shuffle Off');
+    showToast(isShuffleOn ? 'Shuffle on' : 'Shuffle off');
 }
 
 function playNextTrack() {
@@ -816,7 +820,7 @@ function onPlayerError(event) {
         if (badSidebarItem) {
             badSidebarItem.classList.add('restricted');
             const titleDiv = badSidebarItem.querySelector('.track-item-title');
-            if (titleDiv) titleDiv.textContent = '⚠️ Unavailable (Blocked by Artist)';
+            if (titleDiv) titleDiv.textContent = 'Unavailable (stream restricted)';
         }
     }
 

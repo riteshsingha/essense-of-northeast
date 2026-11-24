@@ -39,7 +39,7 @@
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -48,7 +48,6 @@
         <div class="bg-layer bg-layer-light"></div>
         <div class="bg-layer bg-layer-dark"></div>
         <div class="bg-ambient-vignette"></div>
-        <div class="bg-ambient-glow" id="ambient-glow"></div>
     </div>
 
     <!-- Weather & Particle Canvas Overlay -->
@@ -66,7 +65,12 @@
 
         <div class="header-center">
             <div class="clock-pill" id="live-clock" title="Local Time & Diurnal Atmosphere">
-                <span class="phase-icon" id="phase-icon" aria-hidden="true">☀️</span>
+                <span class="phase-icon" id="phase-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                    </svg>
+                </span>
                 <span class="clock-time" id="live-time">--:--</span>
                 <span class="clock-divider" aria-hidden="true">•</span>
                 <span class="phase-label" id="phase-label">Day</span>
@@ -179,35 +183,43 @@
         <div class="sidebar-header">
             <div class="sidebar-header-title">
                 <h3>Nature Soundscapes</h3>
-                <span class="sidebar-count-badge">Live Synthesizer</span>
+                <span class="sidebar-count-badge">Field Audio</span>
             </div>
             <button class="icon-circle-btn" id="close-soundscape-btn" type="button" aria-label="Close soundscape mixer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
         </div>
 
-        <p class="panel-subtitle">Blend authentic Northeast natural elements with the ambient radio.</p>
+        <p class="panel-subtitle">Blend authentic regional field recordings with the radio.</p>
 
         <!-- Atmosphere Lighting Mode -->
         <div class="sound-group">
             <div class="sound-group-header">
-                <span class="sound-group-label">Atmosphere Lighting:</span>
+                <span class="sound-group-label">Atmosphere lighting</span>
                 <span class="phase-indicator-badge" id="current-phase-badge">Sync</span>
             </div>
             <div class="diurnal-selector" id="diurnal-selector">
-                <button class="diurnal-pill" id="atmo-btn-day" data-atmo-theme="light" title="Daylight Tea Garden Ambiance">
-                    <span class="diurnal-pill-icon">☀️</span>
+                <button class="diurnal-pill" id="atmo-btn-day" data-atmo-theme="light" title="Daylight ambiance">
+                    <svg class="diurnal-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                    </svg>
                     <span>Day</span>
                 </button>
-                <button class="diurnal-pill" id="atmo-btn-night" data-atmo-theme="dark" title="Midnight Starlight Ambiance">
-                    <span class="diurnal-pill-icon">🌙</span>
+                <button class="diurnal-pill" id="atmo-btn-night" data-atmo-theme="dark" title="Night ambiance">
+                    <svg class="diurnal-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
                     <span>Night</span>
                 </button>
                 <button class="diurnal-pill active" id="atmo-btn-auto" data-atmo-theme="auto" title="Synchronize with clock">
-                    <span class="diurnal-pill-icon">⏱️</span>
+                    <svg class="diurnal-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
                     <span>Auto</span>
                 </button>
             </div>
@@ -215,58 +227,89 @@
 
         <!-- Weather Effect Selector -->
         <div class="sound-group">
-            <span class="sound-group-label">Visual Atmosphere:</span>
+            <span class="sound-group-label">Visual particles</span>
             <div class="weather-selector">
-                <button class="weather-pill active" data-weather="fireflies">✨ Fireflies</button>
-                <button class="weather-pill" data-weather="rain">🌧️ Rain</button>
-                <button class="weather-pill" data-weather="mist">🌫️ Mountain Mist</button>
+                <button class="weather-pill active" data-weather="fireflies">Fireflies</button>
+                <button class="weather-pill" data-weather="rain">Rain</button>
+                <button class="weather-pill" data-weather="mist">Mountain mist</button>
                 <button class="weather-pill" data-weather="none">Clear</button>
             </div>
         </div>
 
         <!-- Ambient Nature Faders -->
-        <div class="sound-faders-grid">
-            <div class="sound-fader-card">
-                <div class="fader-header">
-                    <span class="fader-title">🌧️ Cherrapunji Rain</span>
-                    <span class="fader-value" id="val-rain">0%</span>
+        <div class="sound-group">
+            <span class="sound-group-label">Field recordings</span>
+            <div class="sound-faders-grid">
+                <div class="sound-fader-card">
+                    <div class="fader-header">
+                        <div class="fader-label-wrap">
+                            <svg class="fader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                                <path d="M8 21v2M12 21v2M16 21v2"></path>
+                            </svg>
+                            <span class="fader-title">Cherrapunji rain</span>
+                        </div>
+                        <span class="fader-value" id="val-rain">0%</span>
+                    </div>
+                    <input type="range" class="fader-range" id="fader-rain" min="0" max="100" value="0" aria-label="Rain volume">
                 </div>
-                <input type="range" class="fader-range" id="fader-rain" min="0" max="100" value="0" aria-label="Rain volume">
-            </div>
 
-            <div class="sound-fader-card">
-                <div class="fader-header">
-                    <span class="fader-title">🔥 Mountain Campfire</span>
-                    <span class="fader-value" id="val-fire">0%</span>
+                <div class="sound-fader-card">
+                    <div class="fader-header">
+                        <div class="fader-label-wrap">
+                            <svg class="fader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                            </svg>
+                            <span class="fader-title">Mountain campfire</span>
+                        </div>
+                        <span class="fader-value" id="val-fire">0%</span>
+                    </div>
+                    <input type="range" class="fader-range" id="fader-fire" min="0" max="100" value="0" aria-label="Campfire volume">
                 </div>
-                <input type="range" class="fader-range" id="fader-fire" min="0" max="100" value="0" aria-label="Campfire volume">
-            </div>
 
-            <div class="sound-fader-card">
-                <div class="fader-header">
-                    <span class="fader-title">🌊 Brahmaputra Stream</span>
-                    <span class="fader-value" id="val-stream">0%</span>
+                <div class="sound-fader-card">
+                    <div class="fader-header">
+                        <div class="fader-label-wrap">
+                            <svg class="fader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                            </svg>
+                            <span class="fader-title">Brahmaputra stream</span>
+                        </div>
+                        <span class="fader-value" id="val-stream">0%</span>
+                    </div>
+                    <input type="range" class="fader-range" id="fader-stream" min="0" max="100" value="0" aria-label="Stream volume">
                 </div>
-                <input type="range" class="fader-range" id="fader-stream" min="0" max="100" value="0" aria-label="Stream volume">
-            </div>
 
-            <div class="sound-fader-card">
-                <div class="fader-header">
-                    <span class="fader-title">🦗 Forest Night Crickets</span>
-                    <span class="fader-value" id="val-crickets">0%</span>
+                <div class="sound-fader-card">
+                    <div class="fader-header">
+                        <div class="fader-label-wrap">
+                            <svg class="fader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                            </svg>
+                            <span class="fader-title">Forest night crickets</span>
+                        </div>
+                        <span class="fader-value" id="val-crickets">0%</span>
+                    </div>
+                    <input type="range" class="fader-range" id="fader-crickets" min="0" max="100" value="0" aria-label="Crickets volume">
                 </div>
-                <input type="range" class="fader-range" id="fader-crickets" min="0" max="100" value="0" aria-label="Crickets volume">
             </div>
         </div>
 
         <!-- Monastery Chime Interactive Action -->
         <div class="monastery-card">
             <div class="monastery-desc">
-                <h4>🔔 Tawang Monastery Bowl</h4>
+                <div class="monastery-header-wrap">
+                    <svg class="fader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                    </svg>
+                    <h4>Tawang singing bowl</h4>
+                </div>
                 <p>Resonant Tibetan singing bowl crafted with harmonic acoustics.</p>
             </div>
             <button class="monastery-bell-btn" id="monastery-bell-btn" type="button">
-                Ring Chime
+                Play chime
             </button>
         </div>
     </aside>
@@ -372,8 +415,13 @@
 
         <!-- Filter Tabs: All vs Favorites -->
         <div class="queue-tab-bar">
-            <button class="queue-tab active" id="tab-all-tracks" type="button">All Tracks</button>
-            <button class="queue-tab" id="tab-fav-tracks" type="button">❤️ Favorites (<span id="fav-count">0</span>)</button>
+            <button class="queue-tab active" id="tab-all-tracks" type="button">All tracks</button>
+            <button class="queue-tab" id="tab-fav-tracks" type="button">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span>Favorites (<span id="fav-count">0</span>)</span>
+            </button>
         </div>
 
         <!-- Search / Filter Input -->
@@ -383,7 +431,12 @@
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input type="text" id="playlist-search" class="search-input" placeholder="Search track or artist…" aria-label="Search tracks in playlist" autocomplete="off">
-            <button class="search-clear-btn" id="search-clear-btn" type="button" aria-label="Clear search">✕</button>
+            <button class="search-clear-btn" id="search-clear-btn" type="button" aria-label="Clear search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
 
         <!-- Track List Container -->
@@ -433,7 +486,7 @@
             </div>
 
             <div class="studio-meta">
-                <span class="studio-badge">Northeast India Ambient Radio</span>
+                <span class="studio-badge">Ambient radio</span>
                 <h1 class="studio-title" id="studio-title">Loading track…</h1>
                 <p class="studio-artist" id="studio-artist">YouTube Music</p>
             </div>
